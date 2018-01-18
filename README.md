@@ -2,6 +2,8 @@
 
 WooCommerce plugin for [BrainBlocks](https://brainblocks.io), a fast, free, easy RaiBlocks payment gateway
 
+See a video of the buyer experience: https://vimeo.com/251610747
+
 ![cart](./img/cart.png)
 
 ## Setup
