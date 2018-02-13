@@ -305,19 +305,28 @@ function wc_brainblocks_gateway_init() {
 		public function process_payment($order_id) {
 
             $order = wc_get_order( $order_id );
-            $transaction = json_decode(file_get_contents('https://brainblocks.io/api/session/' . $_POST['brainblocks_token'] . '/verify'));
+
+            $request       = wp_remote_get( esc_url_raw ( 'https://brainblocks.io/api/session/' . $_POST['brainblocks_token'] . '/verify' ) );
+            $response_code = wp_remote_retrieve_response_code( $request );
 
             $total = (string)round($order->get_total(), 2);
             $currency = strtolower(get_woocommerce_currency());
 
             $error = '';
 
-            if ($transaction->destination !== $this->settings['destination']) {
-                $error = ('Incorrect destination: ' . $transaction->destination . ' expected ' . $this->settings['destination']);
-            } else if ($transaction->amount !== $total) {
-                $error = ('Incorrect amount: ' . var_export($transaction->amount, true) . ' expected ' . var_export($total, true));
-            } else if ($transaction->currency !== $currency) {
-                $error = ('Incorrect currency: ' . $transaction->currency . ' expected ' . $currency);
+            if ( 200 != $response_code ) {
+                    $error = ('Incorrect response code from API (' . $response_code . ')');
+            } 
+            else {
+                $transaction = json_decode( wp_remote_retrieve_body( $request ) );
+
+                if ($transaction->destination !== $this->settings['destination']) {
+                    $error = ('Incorrect destination: ' . $transaction->destination . ' expected ' . $this->settings['destination']);
+                } else if ($transaction->amount !== $total) {
+                    $error = ('Incorrect amount: ' . var_export($transaction->amount, true) . ' expected ' . var_export($total, true));
+                } else if ($transaction->currency !== $currency) {
+                    $error = ('Incorrect currency: ' . $transaction->currency . ' expected ' . $currency);
+                }
             }
 
             if ($error) {
