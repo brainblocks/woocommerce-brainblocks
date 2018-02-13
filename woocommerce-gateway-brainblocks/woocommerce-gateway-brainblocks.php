@@ -216,9 +216,12 @@ function wc_brainblocks_gateway_init() {
                         }
 
                         function toggleBrainBlocksButton() {
-                            let buttonLabel = jQuery('.brainblocks-standard-button input, .brainblocks-standard-button button').val();
 
-                            if (buttonLabel === 'brainblocks') {
+                            var isBrainBlocks = jQuery('.brainblocks-standard-button input').val() === 'brainblocks' || 
+                                              jQuery('.brainblocks-standard-button button').html() === 'brainblocks' ||
+                                              jQuery('.brainblocks-standard-button button').val() === 'brainblocks';
+
+                            if (isBrainBlocks) {
                                 if (!isBrainBlocksButtonRendered()) {
                                     loadBrainBlocksScript(function(brainblocks) {
                                         renderBrainBlocksButton();
