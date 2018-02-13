@@ -5,7 +5,7 @@
  * Description: Accept payments with RaiBlocks using brainblocks.io checkout
  * Author: Daniel Brain
  * Author URI: https://brainblocks.io
- * Version: 1.0.0
+ * Version: 1.0.2
  * Text Domain: wc-gateway-brainblocks
  * Domain Path: /i18n/languages/
  *
