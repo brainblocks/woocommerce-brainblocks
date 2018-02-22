@@ -245,7 +245,9 @@ function wc_brainblocks_gateway_init() {
                         });
 
                         jQuery('body').on('click', function() {
-                            toggleBrainBlocksButton();
+                            setTimeout(function() {
+                                toggleBrainBlocksButton();
+                            }, 10);
                         });
 
                         toggleBrainBlocksButton();
