@@ -136,7 +136,7 @@ function wc_brainblocks_gateway_init() {
 
                         function loadBrainBlocksScript(callback) {
                             if (window.brainblocks) {
-                                callback(window.brainblocks);
+                                return callback(window.brainblocks);
                             } 
 
                             if (window.brainblocksLoadCallbacks) {
