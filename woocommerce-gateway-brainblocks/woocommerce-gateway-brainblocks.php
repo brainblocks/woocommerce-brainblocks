@@ -219,7 +219,8 @@ function wc_brainblocks_gateway_init() {
 
                             var isBrainBlocks = jQuery('.brainblocks-standard-button input').val() === 'brainblocks' || 
                                               jQuery('.brainblocks-standard-button button').html() === 'brainblocks' ||
-                                              jQuery('.brainblocks-standard-button button').val() === 'brainblocks';
+                                              jQuery('.brainblocks-standard-button button').val() === 'brainblocks' ||
+                                              jQuery('input[type=radio][name=payment_method]:checked').val() === 'brainblocks_gateway';
 
                             if (isBrainBlocks) {
                                 if (!isBrainBlocksButtonRendered()) {
