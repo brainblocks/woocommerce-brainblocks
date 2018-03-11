@@ -318,7 +318,7 @@ function wc_brainblocks_gateway_init() {
             $error = '';
 
             if ( 200 != $response_code ) {
-                    $error = ('Incorrect response code from API (' . $response_code . ')');
+                    $error = ('Incorrect response code from API: ' . esc_url_raw ( 'https://brainblocks.io/api/session/' . $_POST['brainblocks_token'] . '/verify' ) . ' (' . $response_code . ')');
             } 
             else {
                 $transaction = json_decode( wp_remote_retrieve_body( $request ) );
