@@ -20,7 +20,7 @@
  * @copyright Copyright: (c) 2018 Daniel Brain
  * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
  *
- * Accept payments with RaiBlocks using brainblocks.io checkout
+ * Accept payments with Nano using brainblocks.io checkout
  */
  
  
@@ -84,7 +84,7 @@ function wc_brainblocks_gateway_init() {
 			$this->icon               = apply_filters('woocommerce_offline_icon', '');
 			$this->has_fields         = false;
 			$this->method_title       = __( 'Brainblocks', 'wc-gateway-brainblocks' );
-            $this->method_description = __( 'Allows RaiBlocks payments.', 'wc-gateway-brainblocks' );
+            $this->method_description = __( 'Allows Nano payments.', 'wc-gateway-brainblocks' );
             $this->order_button_text  = __( 'brainblocks', 'wc-gateway-brainblocks' );
 		  
 			// Load the settings.
@@ -267,7 +267,7 @@ function wc_brainblocks_gateway_init() {
 				'enabled' => array(
 					'title'   => __( 'Enable/Disable', 'wc-gateway-brainblocks' ),
 					'type'    => 'checkbox',
-					'label'   => __( 'Enable RaiBlocks Payments via brainblocks.io', 'wc-gateway-brainblocks' ),
+					'label'   => __( 'Enable Nano Payments via brainblocks.io', 'wc-gateway-brainblocks' ),
 					'default' => 'yes'
 				),
 				
@@ -275,7 +275,7 @@ function wc_brainblocks_gateway_init() {
 					'title'       => __( 'Title', 'wc-gateway-brainblocks' ),
 					'type'        => 'text',
 					'description' => __( 'This controls the title for the payment method the customer sees during checkout.', 'wc-gateway-brainblocks' ),
-					'default'     => __( 'RaiBlocks Payment', 'wc-gateway-brainblocks' ),
+					'default'     => __( 'Nano Payment', 'wc-gateway-brainblocks' ),
 					'desc_tip'    => true,
 				),
 				
@@ -283,22 +283,22 @@ function wc_brainblocks_gateway_init() {
 					'title'       => __( 'Description', 'wc-gateway-brainblocks' ),
 					'type'        => 'textarea',
 					'description' => __( 'Payment method description that the customer will see on your checkout.', 'wc-gateway-brainblocks' ),
-					'default'     => __( 'Pay with RaiBlocks via brainblocks.io.', 'wc-gateway-brainblocks' ),
+					'default'     => __( 'Pay with Nano via brainblocks.io.', 'wc-gateway-brainblocks' ),
 					'desc_tip'    => true,
 				),
 				
 				'instructions' => array(
 					'title'       => __( 'Instructions', 'wc-gateway-brainblocks' ),
 					'type'        => 'textarea',
-					'description' => __( 'Pay with RaiBlocks via brainblocks.io.', 'wc-gateway-brainblocks' ),
+					'description' => __( 'Pay with Nano via brainblocks.io.', 'wc-gateway-brainblocks' ),
 					'default'     => '',
 					'desc_tip'    => true,
                 ),
                 
                 'destination' => array(
-					'title'       => __( 'RaiBlocks Address', 'wc-gateway-brainblocks' ),
+					'title'       => __( 'Nano Address', 'wc-gateway-brainblocks' ),
 					'type'        => 'text',
-					'description' => __( 'Address to receive any sent RaiBlocks', 'wc-gateway-brainblocks' ),
+					'description' => __( 'Address to receive any sent Nano', 'wc-gateway-brainblocks' ),
 					'default'     => __( '', 'wc-gateway-brainblocks' ),
 					'desc_tip'    => true,
 				),
