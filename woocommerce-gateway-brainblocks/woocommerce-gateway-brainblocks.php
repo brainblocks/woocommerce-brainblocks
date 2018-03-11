@@ -96,12 +96,22 @@ function wc_brainblocks_gateway_init() {
 			$this->description  = $this->get_option( 'description' );
             $this->instructions = $this->get_option( 'instructions', $this->description );
             
+            
             add_filter('woocommerce_order_button_html',array( $this, 'display_brainblocks_button_html' ),1);
 
             add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+
+            add_action( 'init', array( $this, 'maybe_return_from_brainblocks' ) );
+
+            $this->maybe_return_from_brainblocks();
         }
         
         public function display_brainblocks_button_html($value) {
+
+            if ($this->settings['full_page_redirect']) {
+                echo $value;
+                return;
+            }
 
             $total = (string)round($this->get_order_total(), 2);
             $currency = strtolower(get_woocommerce_currency());
@@ -301,29 +311,62 @@ function wc_brainblocks_gateway_init() {
 					'description' => __( 'Address to receive any sent Nano', 'wc-gateway-brainblocks' ),
 					'default'     => __( '', 'wc-gateway-brainblocks' ),
 					'desc_tip'    => true,
+                ),
+                
+                'full_page_redirect' => array(
+					'title'   => __( 'Redirect to BrainBlocks', 'wc-gateway-brainblocks' ),
+					'type'    => 'checkbox',
+					'label'   => __( 'Redirect to BrainBlocks site rather than showing BrainBlocks button inline', 'wc-gateway-brainblocks' ),
+					'default' => 'yes'
 				),
 			) );
+        }
+
+        public function maybe_return_from_brainblocks() {
+            $token = $_GET['token'];
+            $order_id = $_GET['wc_order_id'];
+
+            if ($this->settings['full_page_redirect'] && $token && $order_id) {
+                $this->process_payment($order_id);
+            }
         }
         
 		public function process_payment($order_id) {
 
             $order = wc_get_order( $order_id );
 
-            $request       = wp_remote_get( esc_url_raw ( 'https://brainblocks.io/api/session/' . $_POST['brainblocks_token'] . '/verify' ) );
-            $response_code = wp_remote_retrieve_response_code( $request );
-
+            $destination = $this->settings['destination'];
             $total = (string)round($order->get_total(), 2);
             $currency = strtolower(get_woocommerce_currency());
+            $returnurl = $this->get_return_url( $order ) . '&wc_order_id=' . $order_id;
+
+            $bbtoken = $_POST['brainblocks_token'];
+
+            if (!$bbtoken) {
+                $bbtoken = $_GET['token'];
+            }
+
+            if ($this->settings['full_page_redirect'] && !$bbtoken) {
+                $brainblocks_url = 'https://brainblocks.io/checkout?payment.destination=' . $this->settings['destination'] . '&payment.currency=' . $currency . '&payment.amount=' . $total . '&urls.return=' . urlencode($returnurl) . '&urls.cancel=' . urlencode($returnurl);
+
+                return array(
+                    'result' 	=> 'success',
+                    'redirect'	=> $brainblocks_url
+                );
+            }
+
+            $request       = wp_remote_get( esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) );
+            $response_code = wp_remote_retrieve_response_code( $request );
 
             $error = '';
 
             if ( 200 != $response_code ) {
-                    $error = ('Incorrect response code from API: ' . esc_url_raw ( 'https://brainblocks.io/api/session/' . $_POST['brainblocks_token'] . '/verify' ) . ' (' . $response_code . ')');
+                    $error = ('Incorrect response code from API: ' . esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) . ' (' . $response_code . ')');
             } 
             else {
                 $transaction = json_decode( wp_remote_retrieve_body( $request ) );
 
-                if ($transaction->destination !== $this->settings['destination']) {
+                if ($transaction->destination !== $destination) {
                     $error = ('Incorrect destination: ' . $transaction->destination . ' expected ' . $this->settings['destination']);
                 } else if ($transaction->amount !== $total) {
                     $error = ('Incorrect amount: ' . var_export($transaction->amount, true) . ' expected ' . var_export($total, true));
@@ -354,7 +397,7 @@ function wc_brainblocks_gateway_init() {
 			// Return thankyou redirect
 			return array(
 				'result' 	=> 'success',
-				'redirect'	=> $this->get_return_url( $order )
+				'redirect'	=> $returnurl
 			);
 		}
 	
