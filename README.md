@@ -1,6 +1,6 @@
 # woocommerce-brainblocks
 
-WooCommerce plugin for [BrainBlocks](https://brainblocks.io), a fast, free, easy RaiBlocks payment gateway
+WooCommerce plugin for [BrainBlocks](https://brainblocks.io), a fast, free, easy Nano payment gateway
 
 See a video of the buyer experience: https://vimeo.com/251610747
 
