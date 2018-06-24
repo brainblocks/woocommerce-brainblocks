@@ -46,13 +46,7 @@ function wc_brainblocks_add_to_gateways( $gateways ) {
 	return $gateways;
 }
 add_filter( 'woocommerce_payment_gateways', 'wc_brainblocks_add_to_gateways' );
-/**
- * Adds plugin page links
- * 
- * @since 1.0.0
- * @param array $links all plugin links
- * @return array $links all plugin links + our custom links (i.e., "Settings")
- */
+
 function wc_brainblocks_gateway_plugin_links( $links ) {
 	$plugin_links = array(
 		'<a href="' . admin_url( 'admin.php?page=wc-settings&tab=checkout&section=brainblocks_gateway' ) . '">' . __( 'Configure', 'wc-gateway-brainblocks' ) . '</a>'
@@ -60,18 +54,7 @@ function wc_brainblocks_gateway_plugin_links( $links ) {
 	return array_merge( $plugin_links, $links );
 }
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'wc_brainblocks_gateway_plugin_links' );
-/**
- * Offline Payment Gateway
- *
- * Provides an Offline Payment Gateway; mainly for testing purposes.
- * We load it later to ensure WC is loaded first since we're extending it.
- *
- * @class 		WC_Gateway_Brainblocks
- * @extends		WC_Payment_Gateway
- * @version		1.0.0
- * @package		WooCommerce/Classes/Payment
- * @author 		SkyVerge
- */
+
 add_action( 'plugins_loaded', 'wc_brainblocks_gateway_init', 11 );
 function wc_brainblocks_gateway_init() {
 	class WC_Gateway_Brainblocks extends WC_Payment_Gateway {
