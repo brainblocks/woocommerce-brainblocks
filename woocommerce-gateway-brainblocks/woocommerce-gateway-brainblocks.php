@@ -2,23 +2,20 @@
 /**
  * Plugin Name: WooCommerce Brainblocks Gateway
  * Plugin URI: https://brainblocks.io
- * Description: Accept payments with RaiBlocks using brainblocks.io checkout
- * Author: Daniel Brain
+ * Description: Accept payments with Nano using brainblocks.io
+ * Author: BrainBlocks
  * Author URI: https://brainblocks.io
- * Version: 1.0.3
- * Text Domain: wc-gateway-brainblocks
+ * Version: 1.1
+ * Text Domain: brainblocks-gateway
  * Domain Path: /i18n/languages/
  *
- * Copyright: (c) 2018 Daniel Brain
+ * Copyright: (c) 2018 BrainBlocks
  *
- * License: GNU General Public License v3.0
- * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  *
- * @package   WC-Gateway-Brainblocks
- * @author    Daniel Brain
+ * @package   Brainblocks-Gateway
+ * @author    BrainBlocks
  * @category  Admin
- * @copyright Copyright: (c) 2018 Daniel Brain
- * @license   http://www.gnu.org/licenses/gpl-3.0.html GNU General Public License v3.0
+ * @copyright Copyright: (c) 2018 BrainBlocks
  *
  * Accept payments with Nano using brainblocks.io checkout
  */
@@ -42,9 +39,10 @@ function toCents($amount) {
  * @return array $gateways all WC gateways + offline gateway
  */
 function wc_brainblocks_add_to_gateways( $gateways ) {
-	$gateways[] = 'WC_Gateway_Brainblocks';
+	$gateways[] = 'BrainBlocks_Gateway';
 	return $gateways;
 }
+
 add_filter( 'woocommerce_payment_gateways', 'wc_brainblocks_add_to_gateways' );
 
 function wc_brainblocks_gateway_plugin_links( $links ) {
@@ -53,11 +51,12 @@ function wc_brainblocks_gateway_plugin_links( $links ) {
 	);
 	return array_merge( $plugin_links, $links );
 }
+
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), 'wc_brainblocks_gateway_plugin_links' );
 
 add_action( 'plugins_loaded', 'wc_brainblocks_gateway_init', 11 );
 function wc_brainblocks_gateway_init() {
-	class WC_Gateway_Brainblocks extends WC_Payment_Gateway {
+	class BrainBlocks_Gateway extends WC_Payment_Gateway {
 		/**
 		 * Constructor for the gateway.
 		 */
@@ -68,7 +67,7 @@ function wc_brainblocks_gateway_init() {
 			$this->has_fields         = false;
 			$this->method_title       = __( 'Brainblocks', 'wc-gateway-brainblocks' );
             $this->method_description = __( 'Allows Nano payments.', 'wc-gateway-brainblocks' );
-            $this->order_button_text  = __( 'brainblocks', 'wc-gateway-brainblocks' );
+            $this->order_button_text  = __( 'Continue to payment', 'wc-gateway-brainblocks' );
 		  
 			// Load the settings.
 			$this->init_form_fields();
@@ -78,9 +77,6 @@ function wc_brainblocks_gateway_init() {
 			$this->title        = $this->get_option( 'title' );
 			$this->description  = $this->get_option( 'description' );
             $this->instructions = $this->get_option( 'instructions', $this->description );
-            
-            
-            add_filter('woocommerce_order_button_html',array( $this, 'display_brainblocks_button_html' ),1);
 
             add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
 
@@ -88,167 +84,6 @@ function wc_brainblocks_gateway_init() {
 
             $this->maybe_return_from_brainblocks();
         }
-        
-        public function display_brainblocks_button_html($value) {
-
-            if ($this->settings['full_page_redirect']) {
-                echo $value;
-                return;
-            }
-
-            $total = (string)round($this->get_order_total(), 2);
-            $currency = strtolower(get_woocommerce_currency());
-
-            ?>
-                <style>
-                    .brainblocks-standard-button, .brainblocks-raiblocks-button {
-                        display: none;
-                    }
-
-                    #raiblocks-button {
-                        text-align: center;
-                    }
-
-                    .woocommerce-checkout-review-order {
-                        transition: height 0.5s ease-in-out;
-                    }
-                </style>
-
-                <div class="brainblocks-standard-button">
-                    <?= $value ?>
-                </div>
-
-                <div class="brainblocks-raiblocks-button">
-                    <div id="raiblocks-button"></div>
-                </div>
-
-
-                <script>
-                    (function() {
-                        var $ = jQuery;
-
-                        function loadBrainBlocksScript(callback) {
-                            if (window.brainblocks) {
-                                return callback(window.brainblocks);
-                            } 
-
-                            if (window.brainblocksLoadCallbacks) {
-                                return window.brainblocksLoadCallbacks.push(callback);
-                            }
-
-                            window.brainblocksLoadCallbacks = [ callback ];
-
-                            var script = document.createElement('script');
-                            script.src = 'https://brainblocks.io/brainblocks.min.js';
-                            script.onload = function() {
-                                window.brainblocksLoadCallbacks.forEach(function(cb) {
-                                    cb(window.brainblocks);
-                                });
-
-                                delete window.brainblocksLoadCallbacks;
-                            };
-
-                            document.body.appendChild(script);
-                        }
-
-                        function isBrainBlocksButtonRendered() {
-                            return Boolean(document.querySelector('#raiblocks-button').children.length);
-                        }
-
-                        function validateForm() {
-                            var checkout_form = $( 'form.checkout' );
-
-                            checkout_form.one('checkout_place_order', function(event) {
-                                return false;
-                            });
-
-                            checkout_form.submit();
-
-                            return new brainblocks.Promise(function(resolve) {
-                                setTimeout(resolve, 400);
-                            }).then(function() {
-
-                                if (document.querySelector('.woocommerce-invalid')) {
-                                    checkout_form.submit();
-                                    return false;
-                                }
-
-                                return true;
-                            });
-                        }
-
-                        function renderBrainBlocksButton() {
-
-                            if (isBrainBlocksButtonRendered()) {
-                                return;
-                            }
-
-                            brainblocks.Button.render({
-
-                                style: {
-                                    size: 'responsive'
-                                },
-
-                                payment: {
-                                    destination: '<?= $this->settings['destination'] ?>',
-                                    currency:    '<?= $currency ?>',
-                                    amount:      '<?= $total ?>'
-                                },
-
-                                onClick: function() {
-                                    return validateForm();
-                                },
-
-                                onPayment: function(data) {
-                                    var checkout_form = $( 'form.checkout' );
-                                    checkout_form.append('<input type="hidden" name="brainblocks_token" value="' + data.token + '">');
-                                    checkout_form.submit();
-                                }
-
-                            }, '#raiblocks-button');
-                        }
-
-                        function toggleBrainBlocksButton() {
-
-                            var isBrainBlocks = jQuery('.brainblocks-standard-button input').val() === 'brainblocks' || 
-                                              jQuery('.brainblocks-standard-button button').html() === 'brainblocks' ||
-                                              jQuery('.brainblocks-standard-button button').val() === 'brainblocks' ||
-                                              jQuery('input[type=radio][name=payment_method]:checked').val() === 'brainblocks_gateway';
-
-                            if (isBrainBlocks) {
-                                if (!isBrainBlocksButtonRendered()) {
-                                    loadBrainBlocksScript(function(brainblocks) {
-                                        renderBrainBlocksButton();
-                                    });
-                                }
-
-                                jQuery('.brainblocks-standard-button').hide();
-                                jQuery('.brainblocks-raiblocks-button').show();
-                            } else {
-                                jQuery('.brainblocks-raiblocks-button').hide();
-                                jQuery('.brainblocks-standard-button').show();
-                            }
-                        }
-
-                        loadBrainBlocksScript(function() {
-                            setTimeout(function() {
-                                renderBrainBlocksButton();
-                                toggleBrainBlocksButton();
-                            }, 500);
-                        });
-
-                        jQuery('body').on('click', function() {
-                            setTimeout(function() {
-                                toggleBrainBlocksButton();
-                            }, 10);
-                        });
-
-                        toggleBrainBlocksButton();
-                    })();
-                </script>
-            <?php
-        }
-	
 	
 		/**
 		 * Initialize Gateway Settings Form Fields
@@ -295,13 +130,14 @@ function wc_brainblocks_gateway_init() {
 					'default'     => __( '', 'wc-gateway-brainblocks' ),
 					'desc_tip'    => true,
                 ),
-                
-                'full_page_redirect' => array(
-					'title'   => __( 'Redirect to BrainBlocks', 'wc-gateway-brainblocks' ),
-					'type'    => 'checkbox',
-					'label'   => __( 'Redirect to BrainBlocks site rather than showing BrainBlocks button inline', 'wc-gateway-brainblocks' ),
-					'default' => 'yes'
-				),
+
+                'paypal_email' => array(
+					'title'       => __( 'PayPal Email Address', 'wc-gateway-brainblocks' ),
+					'type'        => 'text',
+					'description' => __( 'Address to receive PayPal Payments', 'wc-gateway-brainblocks' ),
+					'default'     => __( '', 'wc-gateway-brainblocks' ),
+					'desc_tip'    => true,
+                ),
 			) );
         }
 
@@ -309,7 +145,7 @@ function wc_brainblocks_gateway_init() {
             $token = $_GET['token'];
             $order_id = $_GET['wc_order_id'];
 
-            if ($this->settings['full_page_redirect'] && $token && $order_id) {
+            if ($token && $order_id) {
                 $this->process_payment($order_id);
             }
         }
@@ -319,6 +155,7 @@ function wc_brainblocks_gateway_init() {
             $order = wc_get_order( $order_id );
 
             $destination = $this->settings['destination'];
+            $paypal = $this->settings['paypal_email'];
             $total = (string)round($order->get_total(), 2);
             $currency = strtolower(get_woocommerce_currency());
             $returnurl = $this->get_return_url( $order ) . '&wc_order_id=' . $order_id;
@@ -326,11 +163,9 @@ function wc_brainblocks_gateway_init() {
             $bbtoken = $_POST['brainblocks_token'];
 
             if (!$bbtoken) {
-                $bbtoken = $_GET['token'];
-            }
+            	$bbtoken = $_GET['token'];
 
-            if ($this->settings['full_page_redirect'] && !$bbtoken) {
-                $brainblocks_url = 'https://brainblocks.io/checkout?payment.destination=' . $this->settings['destination'] . '&payment.currency=' . $currency . '&payment.amount=' . $total . '&urls.return=' . urlencode($returnurl) . '&urls.cancel=' . urlencode($returnurl);
+                $brainblocks_url = 'https://brainblocks.io/checkout?paypal-email=' . $paypal .'&payment.destination=' . $destination . '&payment.currency=' . $currency . '&payment.amount=' . $total . '&urls.return=' . urlencode($returnurl) . '&urls.cancel=' . urlencode($returnurl);
 
                 return array(
                     'result' 	=> 'success',
@@ -384,5 +219,5 @@ function wc_brainblocks_gateway_init() {
 			);
 		}
 	
-  } // end \WC_Gateway_Brainblocks class
+  } // end \BrainBlocks_Gateway class
 }
