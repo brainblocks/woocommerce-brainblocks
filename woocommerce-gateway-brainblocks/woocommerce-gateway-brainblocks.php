@@ -142,8 +142,16 @@ function wc_brainblocks_gateway_init() {
         }
 
         public function maybe_return_from_brainblocks() {
-            $token = $_GET['token'];
-            $order_id = $_GET['wc_order_id'];
+            $token = null;
+            $order_id = null;
+            
+            if (isset($_GET['token'])) {
+                $token = $_GET['token'];
+            }
+
+            if (isset($_GET['wc_order_id'])) {
+                $order_id = $_GET['wc_order_id'];
+            }
 
             if ($token && $order_id) {
                 $this->process_payment($order_id);
