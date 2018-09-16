@@ -211,11 +211,11 @@ function wc_brainblocks_gateway_init() {
                 );
             }
 			
-			// Mark as on-hold (we're awaiting the payment)
-			$order->update_status('processing');
+			// Mark order status completed
+			$order->payment_complete();
 			
-			// Reduce stock levels
-			$order->reduce_order_stock();
+			// Reduce stock levels 
+			//$order->reduce_order_stock(); // <-- Pretty sure $order->payment_complete() handles this
 			
 			// Remove cart
 			WC()->cart->empty_cart();
