@@ -2,10 +2,10 @@
 /**
  * Plugin Name: WooCommerce Brainblocks Gateway
  * Plugin URI: https://brainblocks.io
- * Description: Accept payments with Nano using brainblocks.io
+ * Description: Accept payments with Nano using BrainBlocks
  * Author: BrainBlocks
  * Author URI: https://brainblocks.io
- * Version: 1.1
+ * Version: 1.2
  * Text Domain: brainblocks-gateway
  * Domain Path: /i18n/languages/
  *
@@ -17,7 +17,7 @@
  * @category  Admin
  * @copyright Copyright: (c) 2018 BrainBlocks
  *
- * Accept payments with Nano using brainblocks.io checkout
+ * Accept payments with Nano using BrainBlocks 
  */
  
  
@@ -95,7 +95,7 @@ function wc_brainblocks_gateway_init() {
 				'enabled' => array(
 					'title'   => __( 'Enable/Disable', 'wc-gateway-brainblocks' ),
 					'type'    => 'checkbox',
-					'label'   => __( 'Enable Nano Payments via brainblocks.io', 'wc-gateway-brainblocks' ),
+					'label'   => __( 'Enable Nano Payments via BrainBlocks', 'wc-gateway-brainblocks' ),
 					'default' => 'yes'
 				),
 				
@@ -111,14 +111,14 @@ function wc_brainblocks_gateway_init() {
 					'title'       => __( 'Description', 'wc-gateway-brainblocks' ),
 					'type'        => 'textarea',
 					'description' => __( 'Payment method description that the customer will see on your checkout.', 'wc-gateway-brainblocks' ),
-					'default'     => __( 'Pay with Nano via brainblocks.io.', 'wc-gateway-brainblocks' ),
+					'default'     => __( 'Pay with Nano via BrainBlocks.', 'wc-gateway-brainblocks' ),
 					'desc_tip'    => true,
 				),
 				
 				'instructions' => array(
 					'title'       => __( 'Instructions', 'wc-gateway-brainblocks' ),
 					'type'        => 'textarea',
-					'description' => __( 'Pay with Nano via brainblocks.io.', 'wc-gateway-brainblocks' ),
+					'description' => __( 'Pay with Nano via BrainBlocks.', 'wc-gateway-brainblocks' ),
 					'default'     => '',
 					'desc_tip'    => true,
                 ),
