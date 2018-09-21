@@ -5,7 +5,7 @@
  * Description: Accept payments with Nano using BrainBlocks
  * Author: BrainBlocks
  * Author URI: https://brainblocks.io
- * Version: 1.2
+ * Version: 1.3
  * Text Domain: brainblocks-gateway
  * Domain Path: /i18n/languages/
  *
