@@ -8,7 +8,7 @@ See a video of the buyer experience: https://vimeo.com/251610747
 
 ## Quick Setup
 
-1. Download the plugin zip file: https://brainblocks.io/static/woocommerce-gateway-brainblocks.zip
+1. Download the plugin zip file: https://github.com/brainblocks/woocommerce-brainblocks/releases/latest
 
 2. Upload the zip file in wordpress and install.
 
