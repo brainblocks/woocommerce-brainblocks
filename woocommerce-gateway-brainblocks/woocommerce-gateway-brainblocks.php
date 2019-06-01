@@ -31,6 +31,25 @@ function toCents($amount) {
     return (int)floor($amount * 100);
 }
 
+function findToken($array) {
+    foreach($array as $key) {
+        if (substr( $key, 0, 9 ) === "ZXlKaGJHY") {
+            return $key;
+        }
+    }
+}
+
+function searchOldResults($old_results, $currentToken) {
+    foreach ($old_results as $result) {
+        foreach($result->meta_data as $meta_data_item) {
+            if (findToken($meta_data_item->get_data()) == $currentToken) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 /**
  * Add the gateway to WC Available Gateways
  *
@@ -79,7 +98,8 @@ function wc_brainblocks_gateway_init() {
             $this->instructions = $this->get_option( 'instructions', $this->description );
 
             add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
-            add_filter( 'woocommerce_my_account_my_orders_query', 'brainblocks_token_query', 10, 1 );
+            add_filter( 'woocommerce_my_account_my_orders_query', 'brainblocks_token_query', 10, 2 );
+            // add_filter( 'woocommerce_order_data_store_cpt_get_orders_query', 'brainblocks_token_query', 10, 2 );
 
             add_action( 'init', array( $this, 'maybe_return_from_brainblocks' ) );
 
@@ -143,22 +163,24 @@ function wc_brainblocks_gateway_init() {
         }
 
         public function maybe_return_from_brainblocks() {
-            $token = $_GET['token'];
-            $order_id = $_GET['wc_order_id'];
+            if (isset($_GET['token']) && isset($_GET['wc_order_id'])) {
+                $token = $_GET['token'];
+                $order_id = $_GET['wc_order_id'];
 
-            if (!empty($token) && !empty($order_id)) {
-                $this->process_payment($order_id);
+                if (!empty($token) && !empty($order_id)) {
+                    $this->process_payment($order_id);
+                }
             }
         }
 
+        // pull previous orders
         public function brainblocks_token_query( $query, $query_vars ) {
             if ( ! empty( $query_vars['_brainblocks_token'] ) ) {
                 $query['meta_query'][] = array(
                     'key' => '_brainblocks_token',
-                    'value' => esc_attr( $query_vars['brainblocks_token'] ),
+                    'value' => esc_attr( $query_vars['_brainblocks_token'] ),
                 );
             }
-
             return $query;
         }
 
@@ -189,13 +211,7 @@ function wc_brainblocks_gateway_init() {
             // hasn't been already used before. This avoids replay exploits
             $old_results = wc_get_orders( array( '_brainblocks_token' => $bbtoken ) );
 
-            if (empty($old_results)) {
-                echo '<script>console.log("old results empty")</script>';
-            } else {
-                echo '<script>console.log("old results: ' . count($old_results) . '")</script>';
-            }
-
-            if (count($old_results) != 0) {
+            if (searchOldResults($old_results, $bbtoken) != 0) {
                 $error = ('Token re-use detected.');
             }
 
