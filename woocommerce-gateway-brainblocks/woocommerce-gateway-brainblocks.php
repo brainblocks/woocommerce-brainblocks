@@ -1,15 +1,15 @@
 <?php
 /**
- * Plugin Name: WooCommerce Brainblocks Gateway
+ * Plugin Name: Brainblocks Payment Gateway
  * Plugin URI: https://brainblocks.io
- * Description: Accept payments with Nano using BrainBlocks
+ * Description: Accept payments using BrainBlocks
  * Author: BrainBlocks
  * Author URI: https://brainblocks.io
- * Version: 1.3
+ * Version: 1.4
  * Text Domain: brainblocks-gateway
  * Domain Path: /i18n/languages/
  *
- * Copyright: (c) 2018 BrainBlocks
+ * Copyright: (c) 2018-2019 BrainBlocks
  *
  *
  * @package   Brainblocks-Gateway
@@ -17,10 +17,10 @@
  * @category  Admin
  * @copyright Copyright: (c) 2018 BrainBlocks
  *
- * Accept payments with Nano using BrainBlocks 
+ * Accept payments using BrainBlocks
  */
- 
- 
+
+
 defined( 'ABSPATH' ) or exit;
 // Make sure WooCommerce is active
 if ( ! in_array( 'woocommerce/woocommerce.php', apply_filters( 'active_plugins', get_option( 'active_plugins' ) ) ) ) {
@@ -33,7 +33,7 @@ function toCents($amount) {
 
 /**
  * Add the gateway to WC Available Gateways
- * 
+ *
  * @since 1.0.0
  * @param array $gateways all available WC gateways
  * @return array $gateways all WC gateways + offline gateway
@@ -61,68 +61,69 @@ function wc_brainblocks_gateway_init() {
          * Constructor for the gateway.
          */
         public function __construct() {
-      
+
             $this->id                 = 'brainblocks_gateway';
             $this->icon               = apply_filters('woocommerce_offline_icon', '');
             $this->has_fields         = false;
             $this->method_title       = __( 'Brainblocks', 'wc-gateway-brainblocks' );
-            $this->method_description = __( 'Allows Nano payments.', 'wc-gateway-brainblocks' );
-            $this->order_button_text  = __( 'Continue to payment', 'wc-gateway-brainblocks' );
-          
+            $this->method_description = __( 'Allows Cryptocurrency payments.', 'wc-gateway-brainblocks' );
+            $this->order_button_text  = __( 'Pay with BrainBlocks', 'wc-gateway-brainblocks' );
+
             // Load the settings.
             $this->init_form_fields();
             $this->init_settings();
-            
+
             // Define user set variables
             $this->title        = $this->get_option( 'title' );
             $this->description  = $this->get_option( 'description' );
             $this->instructions = $this->get_option( 'instructions', $this->description );
 
             add_action( 'woocommerce_update_options_payment_gateways_' . $this->id, array( $this, 'process_admin_options' ) );
+            add_filter( 'woocommerce_my_account_my_orders_query', 'brainblocks_token_query', 10, 1 );
 
             add_action( 'init', array( $this, 'maybe_return_from_brainblocks' ) );
 
             $this->maybe_return_from_brainblocks();
         }
-    
+
         /**
          * Initialize Gateway Settings Form Fields
          */
         public function init_form_fields() {
-      
+
             $this->form_fields = apply_filters( 'wc_brainblocks_form_fields', array(
-          
+
                 'enabled' => array(
                     'title'   => __( 'Enable/Disable', 'wc-gateway-brainblocks' ),
                     'type'    => 'checkbox',
-                    'label'   => __( 'Enable Nano Payments via BrainBlocks', 'wc-gateway-brainblocks' ),
+                    'label'   => __( 'Enable Cryptocurrency Payments via BrainBlocks', 'wc-gateway-brainblocks' ),
                     'default' => 'yes'
                 ),
-                
+
                 'title' => array(
                     'title'       => __( 'Title', 'wc-gateway-brainblocks' ),
                     'type'        => 'text',
                     'description' => __( 'This controls the title for the payment method the customer sees during checkout.', 'wc-gateway-brainblocks' ),
-                    'default'     => __( 'Nano Payment', 'wc-gateway-brainblocks' ),
+                    'default'     => __( 'BrainBlocks Payment', 'wc-gateway-brainblocks' ),
                     'desc_tip'    => true,
                 ),
-                
+
                 'description' => array(
                     'title'       => __( 'Description', 'wc-gateway-brainblocks' ),
                     'type'        => 'textarea',
                     'description' => __( 'Payment method description that the customer will see on your checkout.', 'wc-gateway-brainblocks' ),
-                    'default'     => __( 'Pay with Nano via BrainBlocks.', 'wc-gateway-brainblocks' ),
+                    'default'     => __( 'Pay via BrainBlocks.', 'wc-gateway-brainblocks' ),
                     'desc_tip'    => true,
                 ),
-                
+
                 'instructions' => array(
                     'title'       => __( 'Instructions', 'wc-gateway-brainblocks' ),
                     'type'        => 'textarea',
-                    'description' => __( 'Pay with Nano via BrainBlocks.', 'wc-gateway-brainblocks' ),
+                    'description' => __( 'Pay via BrainBlocks.', 'wc-gateway-brainblocks' ),
                     'default'     => '',
                     'desc_tip'    => true,
                 ),
-                
+
                 'destination' => array(
                     'title'       => __( 'Nano Address', 'wc-gateway-brainblocks' ),
                     'type'        => 'text',
@@ -140,7 +141,7 @@ function wc_brainblocks_gateway_init() {
                 ),
             ) );
         }
-        
+
         public function maybe_return_from_brainblocks() {
             $token = $_GET['token'];
             $order_id = $_GET['wc_order_id'];
@@ -148,6 +149,17 @@ function wc_brainblocks_gateway_init() {
             if (!empty($token) && !empty($order_id)) {
                 $this->process_payment($order_id);
             }
+        }
+
+        public function brainblocks_token_query( $query, $query_vars ) {
+            if ( ! empty( $query_vars['_brainblocks_token'] ) ) {
+                $query['meta_query'][] = array(
+                    'key' => '_brainblocks_token',
+                    'value' => esc_attr( $query_vars['brainblocks_token'] ),
+                );
+            }
+
+            return $query;
         }
 
         public function process_payment($order_id) {
@@ -171,11 +183,25 @@ function wc_brainblocks_gateway_init() {
                 );
             }
 
+            $error = '';
+
+            // Before doing any request, make sure the posted brainblocks_token
+            // hasn't been already used before. This avoids replay exploits
+            $old_results = wc_get_orders( array( '_brainblocks_token' => $bbtoken ) );
+
+            if (empty($old_results)) {
+                echo '<script>console.log("old results empty")</script>';
+            } else {
+                echo '<script>console.log("old results: ' . count($old_results) . '")</script>';
+            }
+
+            if (count($old_results) != 0) {
+                $error = ('Token re-use detected.');
+            }
+
             $request       = wp_remote_get( esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) );
 
             $response_code = wp_remote_retrieve_response_code( $request );
-
-            $error = '';
 
             if ( 200 != $response_code ) {
                     $error = ('Incorrect response code from API: ' . esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) . ' (' . $response_code . ')');
@@ -194,7 +220,7 @@ function wc_brainblocks_gateway_init() {
             if ($error) {
                 $order->update_status('failed', $error);
 
-                wc_add_notice($error, 'error'); 
+                wc_add_notice($error, 'error');
 
                 return array(
                     'result' => 'failure'
@@ -203,16 +229,19 @@ function wc_brainblocks_gateway_init() {
 
             // Mark order status as processing and reduce stock
             $order->payment_complete();
-    
+
+            // Save the brainblocks token
+            $order->update_meta_data( '_brainblocks_token', $bbtoken );
+
             // Remove cart
             WC()->cart->empty_cart();
-            
+
             // Return thankyou redirect
             return array(
                 'result'    => 'success',
                 'redirect'  => $returnurl
             );
         }
-    
+
   } // end \BrainBlocks_Gateway class
 }
