@@ -21,11 +21,13 @@ See a video of the buyer experience: https://vimeo.com/251610747
    cd woocommerce-brainblocks
    ```
    
-2. Upload the `woocommerce-gateway-brainblocks` directory to your `wp-content/plugins` directory:
+2A. Upload the `woocommerce-gateway-brainblocks` directory to your `wp-content/plugins` directory:
 
    ```bash
    rsync -r woocommerce-gateway-brainblocks user@mysite.com:/usr/share/wordpress/wp-content/plugins/
    ```
+
+2B. Upload the `woocommerce-gateway-brainblock.zip` file directly on the Wordpress Plugins page:
    
 3. Activate the plugin in the WordPress plugins section:
 
