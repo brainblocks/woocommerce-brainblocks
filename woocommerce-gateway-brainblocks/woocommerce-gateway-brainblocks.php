@@ -198,7 +198,7 @@ function wc_brainblocks_gateway_init() {
 
             if (!$bbtoken) {
 
-                $brainblocks_url = 'https://brainblocks.io/checkout?paypal-email=' . $paypal .'&payment.destination=' . $destination . '&payment.currency=' . $currency . '&payment.amount=' . $total . '&urls.return=' . urlencode($returnurl) . '&urls.cancel=' . urlencode($returnurl);
+                $brainblocks_url = 'https://brainblocks.io/checkout.htm?paypal-email=' . $paypal .'&payment.destination=' . $destination . '&payment.currency=' . $currency . '&payment.amount=' . $total . '&urls.return=' . urlencode($returnurl) . '&urls.cancel=' . urlencode($returnurl);
                 return array(
                     'result'    => 'success',
                     'redirect'  => $brainblocks_url
