@@ -5,7 +5,7 @@
  * Description: Accept payments using BrainBlocks
  * Author: BrainBlocks
  * Author URI: https://brainblocks.io
- * Version: 1.4
+ * Version: 1.5
  * Text Domain: brainblocks-gateway
  * Domain Path: /i18n/languages/
  *
@@ -190,14 +190,20 @@ function wc_brainblocks_gateway_init() {
 
             $destination = $this->settings['destination'];
             $paypal = $this->settings['paypal_email'];
-            $total = (string)round($order->get_total(), 2);
             $currency = strtolower(get_woocommerce_currency());
+
+            if ( $currency == 'nano' ) {
+              $currency = "rai";
+              $total = (string)round($order->get_total() * 1000000, 2);
+            } else {
+              $total = (string)round($order->get_total(), 2);
+            }
+
             $returnurl = $this->get_return_url( $order ) . '&wc_order_id=' . $order_id;
 
             $bbtoken = $_GET['token'];
 
             if (!$bbtoken) {
-
                 $brainblocks_url = 'https://brainblocks.io/checkout.htm?paypal-email=' . $paypal .'&payment.destination=' . $destination . '&payment.currency=' . $currency . '&payment.amount=' . $total . '&urls.return=' . urlencode($returnurl) . '&urls.cancel=' . urlencode($returnurl);
                 return array(
                     'result'    => 'success',
@@ -215,21 +221,25 @@ function wc_brainblocks_gateway_init() {
                 $error = ('Token re-use detected.');
             }
 
-            $request       = wp_remote_get( esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) );
+            $request = wp_remote_get( esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) );
 
-            $response_code = wp_remote_retrieve_response_code( $request );
-
-            if ( 200 != $response_code ) {
-                    $error = ('Incorrect response code from API: ' . esc_url_raw ( 'https://brainblocks.io/api/session/' . $bbtoken . '/verify' ) . ' (' . $response_code . ')');
+            if ( is_wp_error( $request ) ) {
+                $error = ('Error when making request to: ' . esc_url_raw('https://brainblocks.io/api/session/' . $bbtoken . '/verify') . ' (' . $request->get_error_message() . ')');
             } else {
-                $transaction = json_decode( wp_remote_retrieve_body( $request ) );
+                $response_code = wp_remote_retrieve_response_code( $request );
 
-                if ($transaction->destination !== $destination) {
-                    $error = ('Incorrect destination: ' . $transaction->destination . ' expected ' . $this->settings['destination']);
-                } else if ($transaction->amount !== $total) {
-                    $error = ('Incorrect amount: ' . var_export($transaction->amount, true) . ' expected ' . var_export($total, true));
-                } else if ($transaction->currency !== $currency) {
-                    $error = ('Incorrect currency: ' . $transaction->currency . ' expected ' . $currency);
+                if (200 != $response_code) {
+                    $error = ('Incorrect response code from API: ' . esc_url_raw('https://brainblocks.io/api/session/' . $bbtoken . '/verify') . ' (' . $response_code . ')');
+                } else {
+                    $transaction = json_decode( wp_remote_retrieve_body( $request ) );
+
+                    if ($transaction->destination !== $destination) {
+                        $error = ('Incorrect destination: ' . $transaction->destination . ' expected ' . $this->settings['destination']);
+                    } else if ($transaction->amount !== $total) {
+                        $error = ('Incorrect amount: ' . var_export($transaction->amount, true) . ' expected ' . var_export($total, true));
+                    } else if ($transaction->currency !== $currency) {
+                        $error = ('Incorrect currency: ' . $transaction->currency . ' expected ' . $currency);
+                    }
                 }
             }
 
@@ -260,4 +270,23 @@ function wc_brainblocks_gateway_init() {
         }
 
   } // end \BrainBlocks_Gateway class
+}
+
+/**
+ * NANO currencies
+ */
+add_filter( 'woocommerce_currencies', 'wc_add_currency_nano' );
+
+function wc_add_currency_nano( $currencies ) {
+  $currencies['NANO'] = __( 'NANO (Mnano)', 'woocommerce' );
+  return $currencies;
+}
+
+add_filter('woocommerce_currency_symbol', 'wc_add_currency_symbol_nano', 10, 2);
+
+function wc_add_currency_symbol_nano( $currency_symbol, $currency ) {
+  switch( $currency ) {
+    case 'NANO': $currency_symbol = 'NANO'; break;
+  }
+  return $currency_symbol;
 }
